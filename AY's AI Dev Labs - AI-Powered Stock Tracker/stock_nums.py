@@ -2,6 +2,10 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+import sys
+import os
+
+import widgets.loading_screen
 
 
 # Gets a fills in a raw stock array
@@ -94,6 +98,11 @@ def draw_line_graph(data_arrays, labels, title: str, xlabel: str, ylabel: str):
 
 # The main function. Declared for ease and convention.
 def main() -> None:
+    # First run loading screen for flavour
+
+    widgets.loading_screen.run_loading_screen()
+
+    # Prep for stock code
     raw_stock_array : list[list] = []
     stock_array : list[list] = []
 
