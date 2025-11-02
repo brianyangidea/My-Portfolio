@@ -4,7 +4,9 @@ Language: Python
 
 Libraries Required:
 - yfinance
-  Install packages via "py -m pip install PACKAGE_NAME" or alternative installers if suitable.
+- pandas
+- datetime
+- matplotlib
 
 Description:
 An AI-powered stock tracking solution that displays multiple stocks, shows previous trends and predicts future ones.

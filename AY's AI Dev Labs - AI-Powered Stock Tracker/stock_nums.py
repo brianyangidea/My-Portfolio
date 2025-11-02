@@ -3,14 +3,16 @@ import pandas as pd
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
-raw_stock_array : list[list] = []
-stock_array : list[list] = []
 
+# Gets a fills in a raw stock array
+#
+# Parameters:
+# - data_arrays: List of lists of floats. Each sub-list is one line.
+# - labels: Optional list of labels for each line.
+# - title: Title of the graph.
+# - xlabel: Label for the X-axis.
+# - ylabe
 def get_first_of_month_prices(ticker: str):
-    """
-    Fetches the closing price of a stock from the first trading day
-    of each month for the past 12 months and returns them as an array.
-    """
     today = datetime.now().date()
     start_date = (today.replace(day=1) - timedelta(days=365))
 
@@ -45,28 +47,23 @@ def get_first_of_month_prices(ticker: str):
             prices.append(round(close_price, 2))
             dates.append(first_trading_day.date())
 
-    # Reverse so it goes oldest → newest
+    # Reverse so it goes oldest to newest
     prices = prices[::-1]
     dates = dates[::-1]
 
-    # Add values to array
-    raw_stock_array.append([ticker, dates, prices])
-
-    return prices
+    return [ticker, dates, prices]
 
 
+# Plots lines on a single graph using given data.
+#
+# Parameters:
+# - data_arrays: List of lists of floats. Each sub-list is one line.
+# - labels: Optional list of labels for each line.
+# - title: Title of the graph.
+# - xlabel: Label for the X-axis.
+# - ylabel: Label for the Y-axis.
+#
 def draw_line_graph(data_arrays, labels, title: str, xlabel: str, ylabel: str):
-    """
-    Plots multiple lines on a single graph.
-    
-    Parameters:
-    - data_arrays: List of lists of floats. Each sub-list is one line.
-    - labels: Optional list of labels for each line.
-    - title: Title of the graph.
-    - xlabel: Label for the X-axis.
-    - ylabel: Label for the Y-axis.
-    """
-
     if not data_arrays:
         print("No data provided.")
         return
@@ -95,15 +92,16 @@ def draw_line_graph(data_arrays, labels, title: str, xlabel: str, ylabel: str):
     plt.show()
 
 
+# The main function. Declared for ease and convention.
+def main() -> None:
+    raw_stock_array : list[list] = []
+    stock_array : list[list] = []
 
-if __name__ == "__main__":
     # Example usage: fetch prices for Apple, Amazon, Google, and NVIDIA Corp
     tickers = ["AAPL", "AMZN", "GOOG", "NVDA"]
 
     for t in tickers:
-        get_first_of_month_prices(t)
-
-    print("\n\n\n")
+        raw_stock_array.append(get_first_of_month_prices(t))
 
     # Converts the finance "float" values into standard plottable float values
     ticker_count = len(raw_stock_array)
@@ -124,3 +122,9 @@ if __name__ == "__main__":
     labels = ["Apple (AAPL)", "Amazon (AMZN)", "Alphabet Inc. (GOOG)", "NVIDIA Corp (NVDA)"]
 
     draw_line_graph(data, labels=labels, title="Stock Prices Comparison For The Last Year", xlabel="Last 12 Months", ylabel="Price of Stock (In USD)")
+    
+    return
+
+
+if __name__ == "__main__":
+    main()
