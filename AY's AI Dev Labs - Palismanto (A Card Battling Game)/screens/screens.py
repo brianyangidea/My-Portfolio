@@ -3,6 +3,8 @@ import pygame
 import sys
 import vlc
 import time
+import random
+import math
 
 # Initialize Pygame
 pygame.init()
@@ -43,6 +45,58 @@ class TitleScreen(Screen):
         super().__init__(manager)
         self.button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2, 200, 50)
         self.soundtrack = play_mp3("royalty_free_music/Palismanto_Title_Card.mp3", volume=80)
+        
+        # Bouncing squares state
+        self.squares = []
+
+        # Base square variables (for preservation)
+        self.squares.append({
+            'size': 40,
+            'pos': [50.0, 50.0],
+            'vel': [2.4, 1.8],
+            'color': (200, 60, 60),
+        })
+        # Add in 14 more random squares for 15 total
+        for _ in range(14):
+            size = random.randint(24, 68)
+            x = random.uniform(0, WIDTH - size)
+            y = random.uniform(0, HEIGHT - size)
+            vx = random.choice([-1, 1]) * random.uniform(1.2, 3.0)
+            vy = random.choice([-1, 1]) * random.uniform(1.0, 2.8)
+            color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+            self.squares.append({
+                'size': size,
+                'pos': [x, y],
+                'vel': [vx, vy],
+                'color': color,
+            })
+
+    def update(self):
+        # Update all squares
+        for s in self.squares:
+            s['pos'][0] += s['vel'][0]
+            s['pos'][1] += s['vel'][1]
+
+            # Bounce off left/right
+            if s['pos'][0] <= 0:
+                s['pos'][0] = 0
+                s['vel'][0] = abs(s['vel'][0])
+                # changed color on bounce
+                s['color'] = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+            elif s['pos'][0] + s['size'] >= WIDTH:
+                s['pos'][0] = WIDTH - s['size']
+                s['vel'][0] = -abs(s['vel'][0])
+                s['color'] = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+
+            # Bounce off top/bottom
+            if s['pos'][1] <= 0:
+                s['pos'][1] = 0
+                s['vel'][1] = abs(s['vel'][1])
+                s['color'] = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+            elif s['pos'][1] + s['size'] >= HEIGHT:
+                s['pos'][1] = HEIGHT - s['size']
+                s['vel'][1] = -abs(s['vel'][1])
+                s['color'] = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -51,10 +105,13 @@ class TitleScreen(Screen):
                 self.soundtrack = play_mp3("royalty_free_music/Palismanto_Stinger.mp3", volume=80)
                 time.sleep(2.2)
                 self.manager.go_to(GameScreen(self.manager))
-                self.soundtrack.stop()
 
     def draw(self, surface):
         surface.fill(WHITE)
+        # Draw all bouncing squares
+        for s in self.squares:
+            pygame.draw.rect(surface, s['color'],
+                             (int(s['pos'][0]), int(s['pos'][1]), s['size'], s['size']))
         title_text = font_large.render("Palismanto: The Card Battling Game", True, BLACK)
         surface.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 3))
 
@@ -65,12 +122,32 @@ class TitleScreen(Screen):
         button_text = font_small.render("Start Game", True, WHITE)
         surface.blit(button_text, (self.button_rect.centerx - button_text.get_width() // 2,
                                    self.button_rect.centery - button_text.get_height() // 2))
+    # (squares already drawn behind UI)
 
 
 # Game Screen
 class GameScreen(Screen):
     def __init__(self, manager):
         super().__init__(manager)
+        # Animated bars at the bottom
+        self.bar_count = 8
+        self.bar_width = max(8, WIDTH // (self.bar_count * 3))
+        self.bar_spacing = self.bar_width // 2
+        self.bar_max_height = 120
+        # Per-bar attributes (phase, speed, color)
+        self.bars = []
+        for i in range(self.bar_count):
+            phase = i * (2 * math.pi / max(1, self.bar_count))
+            speed = 0.8 + (i % 4) * 0.25
+            c = pygame.Color(0, 0, 0)
+            c.hsva = (i * (360 / max(1, self.bar_count)), 75, 85, 100)
+            color = (c.r, c.g, c.b)
+            self.bars.append({'phase': phase, 'speed': speed, 'color': color})
+        self.bar_time = 0.0
+
+    def update(self):
+        # advance animation time for bars
+        self.bar_time += 0.06
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -84,6 +161,18 @@ class GameScreen(Screen):
 
         info = font_small.render("Press ESC to return", True, WHITE)
         surface.blit(info, (WIDTH // 2 - info.get_width() // 2, HEIGHT // 2 + 50))
+
+        # Draw animated multicolored bars at the bottom
+        total_width = self.bar_count * self.bar_width + (self.bar_count - 1) * self.bar_spacing
+        start_x = (WIDTH - total_width) // 2
+        bottom_margin = 12
+        for i, bar in enumerate(self.bars):
+            h = (math.sin(self.bar_time * bar['speed'] + bar['phase']) + 1) / 2
+            height = int(h * self.bar_max_height)
+            x = start_x + i * (self.bar_width + self.bar_spacing)
+            y = HEIGHT - bottom_margin - height
+            rect = pygame.Rect(x, y, self.bar_width, height)
+            pygame.draw.rect(surface, bar['color'], rect)
 
 
 # Screen Manager
