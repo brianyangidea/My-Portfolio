@@ -23,6 +23,7 @@ RED = "red"
 # Fonts
 font_large = pygame.font.SysFont(None, 48)
 font_small = pygame.font.SysFont(None, 36)
+font_verysmall = pygame.font.SysFont(None, 24)
 
 # Base Screen Class
 class Screen:
@@ -40,13 +41,12 @@ class Screen:
 
 # Title Screen
 class TitleScreen(Screen):
-
     def __init__(self, manager):
         super().__init__(manager)
         self.button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2, 200, 50)
         self.soundtrack = play_mp3("royalty_free_music/Palismanto_Title_Card.mp3", volume=80)
         
-        # Bouncing squares state
+        # Bouncing squares state array
         self.squares = []
 
         # Base square variables (for preservation)
@@ -129,6 +129,8 @@ class TitleScreen(Screen):
 class GameScreen(Screen):
     def __init__(self, manager):
         super().__init__(manager)
+        self.soundtrack = play_mp3("royalty_free_music/Palismanto_Menu.mp3", volume=80)
+
         # Animated bars at the bottom
         self.bar_count = 8
         self.bar_width = max(8, WIDTH // (self.bar_count * 3))
@@ -152,15 +154,25 @@ class GameScreen(Screen):
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.manager.go_to(TitleScreen(self.manager))  # Go back to title
+            self.soundtrack.stop()
 
     def draw(self, surface):
         surface.fill(GREEN)
-        text = font_large.render("Game Screen", True, WHITE)
+        text = font_large.render("Welcome To A New Adventure!", True, WHITE)
         surface.blit(text, (WIDTH // 2 - text.get_width() // 2,
-                            HEIGHT // 2 - text.get_height() // 2))
+                            HEIGHT // 6 - text.get_height() // 6))
+        
+        info = font_small.render("Make a selection:", True, WHITE)
+        surface.blit(info, (WIDTH // 2 - info.get_width() // 2, HEIGHT // 6 + 50))
 
-        info = font_small.render("Press ESC to return", True, WHITE)
-        surface.blit(info, (WIDTH // 2 - info.get_width() // 2, HEIGHT // 2 + 50))
+        info = font_verysmall.render("Press ENTER to start!", True, WHITE)
+        surface.blit(info, (WIDTH // 2 - info.get_width() // 2, HEIGHT // 6 + 100))
+
+        info = font_verysmall.render("Press SPACE to adjust settings?", True, WHITE)
+        surface.blit(info, (WIDTH // 2 - info.get_width() // 2, HEIGHT // 6 + 150))
+
+        info = font_verysmall.render("Or press ESC to return...", True, WHITE)
+        surface.blit(info, (WIDTH // 2 - info.get_width() // 2, HEIGHT // 6 + 200))
 
         # Draw animated multicolored bars at the bottom
         total_width = self.bar_count * self.bar_width + (self.bar_count - 1) * self.bar_spacing
